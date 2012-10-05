@@ -3226,7 +3226,7 @@ function loadStyleSheets(callback, reload) {
 }
 
 function loadStyleSheet(sheet, callback, reload, remaining) {
-    var url       = window.location.href.replace(/[#?].*$/, '');
+    var url       = window.location ? window.location.href.replace(/[#?].*$/, '') : '';
     var href      = sheet.href.replace(/\?.*$/, '');
     var css       = cache && cache.getItem(href);
     var timestamp = cache && cache.getItem(href + ':timestamp');
@@ -3332,28 +3332,30 @@ function xhr(url, type, callback, errback) {
     var xhr = getXMLHttpRequest();
     var async = isFileProtocol ? false : less.async;
 
-    if (typeof(xhr.overrideMimeType) === 'function') {
-        xhr.overrideMimeType('text/css');
-    }
-    xhr.open('GET', url, async);
-    xhr.setRequestHeader('Accept', type || 'text/x-less, text/css; q=0.9, */*; q=0.5');
-    xhr.send(null);
+	if (xhr) {
+		if (typeof(xhr.overrideMimeType) === 'function') {
+			xhr.overrideMimeType('text/css');
+		}
+		xhr.open('GET', url, async);
+		xhr.setRequestHeader('Accept', type || 'text/x-less, text/css; q=0.9, */*; q=0.5');
+		xhr.send(null);
 
-    if (isFileProtocol) {
-        if (xhr.status === 0 || (xhr.status >= 200 && xhr.status < 300)) {
-            callback(xhr.responseText);
-        } else {
-            errback(xhr.status, url);
-        }
-    } else if (async) {
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState == 4) {
-                handleResponse(xhr, callback, errback);
-            }
-        };
-    } else {
-        handleResponse(xhr, callback, errback);
-    }
+		if (isFileProtocol) {
+			if (xhr.status === 0 || (xhr.status >= 200 && xhr.status < 300)) {
+				callback(xhr.responseText);
+			} else {
+				errback(xhr.status, url);
+			}
+		} else if (async) {
+			xhr.onreadystatechange = function () {
+				if (xhr.readyState == 4) {
+					handleResponse(xhr, callback, errback);
+				}
+			};
+		} else {
+			handleResponse(xhr, callback, errback);
+		}
+	}
 
     function handleResponse(xhr, callback, errback) {
         if (xhr.status >= 200 && xhr.status < 300) {
